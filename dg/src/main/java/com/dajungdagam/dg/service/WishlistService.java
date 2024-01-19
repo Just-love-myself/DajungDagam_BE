@@ -1,5 +1,7 @@
 package com.dajungdagam.dg.service;
 
+import com.dajungdagam.dg.domain.dto.RecommendInputDto;
+import com.dajungdagam.dg.domain.dto.RecommendOutputDto;
 import com.dajungdagam.dg.domain.dto.WishlistDto;
 import com.dajungdagam.dg.domain.entity.Post;
 import com.dajungdagam.dg.domain.entity.User;
@@ -28,6 +30,9 @@ public class WishlistService {
     @Autowired
     private WishListJpaRepository wishlistRepository;
 
+    @Autowired
+    private WebClientService webClientService;
+
     // 빈 순환 참조 뜨니까 사용 안함
 //    @Autowired
 //    private TradePostService tradePostService;
@@ -45,8 +50,9 @@ public class WishlistService {
 
     // TODO: 이미 찜목록되어 있으면, 알려야하나?
     @Transactional
-    public Wishlist addPostToWishlist(WishlistDto wishlistDto){
+    public RecommendOutputDto addPostToWishlist(WishlistDto wishlistDto){
         Wishlist wishlist = null;
+        RecommendOutputDto recommendOutputDto = null;
         try {
             //log.info("wishlist 1 : " + wishlistDto.getKakaoName());
             Optional<User> userObj = userRepository.findById(wishlistDto.getUserId());
@@ -74,6 +80,12 @@ public class WishlistService {
             // wishlistCount 증가
             tradePost.setWishlistCount(tradePost.getWishlistCount() + 1);
 
+            //FastAPI 서버에 요청 보내서 추천 게시글 제목 받아오기
+            //interaction(찜 여부)는 알 수 없음(기능 구현 x) --> 임시 값으로 설정 (1 or 0)
+            RecommendInputDto recommendInputDto = new RecommendInputDto(
+                    user.getId(), tradePost.getId().intValue(), tradePost.getTitle(), 1, 5);
+            recommendOutputDto = webClientService.sendHttpPostRequestToFastApi(recommendInputDto);
+
             log.info("wishlist의 tradeposts: " + wishlist.getTradePosts().toString());
 
 
@@ -81,7 +93,8 @@ public class WishlistService {
             log.info(e.getMessage());
             return null;
         }
-        return wishlist;
+//        return wishlist;
+        return recommendOutputDto;
     }
 
 

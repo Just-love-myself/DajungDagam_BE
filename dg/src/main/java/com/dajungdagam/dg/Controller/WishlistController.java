@@ -1,5 +1,6 @@
 package com.dajungdagam.dg.Controller;
 
+import com.dajungdagam.dg.domain.dto.RecommendOutputDto;
 import com.dajungdagam.dg.domain.dto.UserResponseDto;
 import com.dajungdagam.dg.domain.dto.WishlistDto;
 import com.dajungdagam.dg.domain.entity.Wishlist;
@@ -28,7 +29,7 @@ public class WishlistController {
 
     // 찜하기
     @PostMapping("/wishlist")
-    public ResponseEntity<String> likes(Authentication authentication, @RequestBody WishlistDto wishlistDto) {
+    public ResponseEntity<RecommendOutputDto> likes(Authentication authentication, @RequestBody WishlistDto wishlistDto) {
 
         try{
             if(authentication == null)
@@ -42,10 +43,14 @@ public class WishlistController {
                 throw new Exception("user is not same");
             }
 
-            Wishlist wishlist = wishlistService.addPostToWishlist(wishlistDto);
-            if(wishlist == null)    throw new Exception("찜하기 실패");
+//            Wishlist wishlist = wishlistService.addPostToWishlist(wishlistDto);
+//            if(wishlist == null)    throw new Exception("찜하기 실패");
+            RecommendOutputDto recommendOutputDto = wishlistService.addPostToWishlist(wishlistDto);
+            if(recommendOutputDto == null)  throw new Exception("FastAPI 서버로 데이터 요청 실패");
 
-            return ResponseEntity.ok().body("찜 완료");
+            System.out.println(recommendOutputDto.getPostTitles());
+
+            return ResponseEntity.ok().body(recommendOutputDto);
         } catch(Exception e){
 
             log.error(e.getMessage());
